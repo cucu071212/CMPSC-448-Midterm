@@ -4,8 +4,8 @@ CMPSC 448 Midterm Project (Fall 2026)
 
 | Role | Name | Responsibilities |
 |------|------|------------------|
-| Member | Charlie Kim | Data preprocessing, shared training pipeline, CNN, RQ1–RQ2 |
-| Member | Jonghun Won | RNN (LSTM), RQ3–RQ4 analysis, report editing |
+| Member | Charlie Kim | Data preprocessing, shared training pipeline, RNN (LSTM), RQ1–RQ2 |
+| Member | Jonghun Won | CNN, RQ3–RQ4 analysis, report editing |
 
 Project report: `report/report.pdf`
 
