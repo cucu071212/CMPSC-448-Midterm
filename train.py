@@ -1,6 +1,6 @@
 """Shared training entry point for data.py, TextCNN and TextRNN.
 
-Example: python train.py --model cnn --mode output --data-dir /content/drive/MyDrive/dataset
+Example: python train.py --model cnn --mode output --data-dir /content/CMPSC-448-Midterm/data
 """
 import argparse
 import json
@@ -15,8 +15,8 @@ from torch import nn
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score
 
 from data import Vocab, build_loaders
-from model.cnn import TextCNN, LABELS, ID2LABEL
-from model.rnn import TextRNN
+from src.cnn import TextCNN, LABELS, ID2LABEL
+from src.rnn import TextRNN
 
 
 def seed_everything(seed):
@@ -175,8 +175,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--model', choices=['cnn', 'rnn'], default='cnn')
     parser.add_argument('--mode', choices=['input', 'output', 'both'], default='output')
-    parser.add_argument('--data-dir', type=Path, default=Path(__file__).parent / 'Dataset')
-    parser.add_argument('--output-dir', type=Path, default=Path(__file__).parent / 'training_results')
+    parser.add_argument('--data-dir', type=Path, default=Path(__file__).resolve().parent / 'data')
+    parser.add_argument('--output-dir', type=Path, default=Path(__file__).resolve().parent / 'results')
     parser.add_argument('--vocab-path', type=Path, help='Reuse a vocabulary from the same mode and training split')
     parser.add_argument('--device', choices=['auto', 'cpu', 'cuda'], default='auto')
     for name, default in [('epochs', 15), ('patience', 3), ('batch-size', 64), ('max-len', 512),
