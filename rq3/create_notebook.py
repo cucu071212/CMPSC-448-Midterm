@@ -308,6 +308,102 @@ print('Archive:', archive)
 files.download(str(archive))
 ''')
 
+# The default delivered notebook is the short, automatic RQ3 pipeline.
+original_cells = cells
+cells = []
+md('''# RQ3: automatic cross-domain comparison
+Use your existing project and train/validation/test CSVs. Select a GPU and Run all.
+No cloning, package installation, dataset download, manual review, or archive download.
+Compares coding-trained and math-trained classifiers on the SAME coding test set,
+using CNN and RNN (four runs). Domains are keyword proxies from prompts, not human-reviewed labels.
+The quick run uses at most 500 training, 100 validation and 200 test responses per family,
+3 epochs and 128 tokens. This is an exploratory coding-versus-math RQ3 result.
+30 minutes is a target; GPU speed and available examples determine actual runtime.
+''')
+code('''from pathlib import Path
+import sys, subprocess, json, re
+from datetime import datetime
+import pandas as pd
+import torch
+from IPython.display import display, Image
+
+PROJECT_DIR = Path('/content/CMPSC-448-Midterm')
+if not (PROJECT_DIR / 'train.py').is_file() and Path('train.py').is_file():
+    PROJECT_DIR = Path.cwd()
+PROJECT_DIR = PROJECT_DIR.resolve()
+SOURCE_DIR = PROJECT_DIR / 'data'  # Existing prepared CSVs.
+RQ3_DIR = PROJECT_DIR / 'rq3'
+for name in ('train.py', 'data.py', 'src/cnn.py', 'src/rnn.py'):
+    assert (PROJECT_DIR / name).is_file(), f'Code missing: {PROJECT_DIR / name}'
+sys.path.insert(0, str(PROJECT_DIR))
+from prepare_data import validate_csvs, COLUMNS, LABELS, SPLITS
+for split in SPLITS:
+    assert (SOURCE_DIR / f'{split}.csv').is_file(), f'Existing CSV required: {SOURCE_DIR / (split + ".csv")}. Set SOURCE_DIR to your data folder.'
+assert torch.cuda.is_available(), 'Select a GPU runtime.'
+SEED, EPOCHS, PATIENCE, BATCH_SIZE, MAX_LEN = 42, 3, 2, 64, 128
+TARGET_DOMAIN, SOURCE_DOMAINS = 'coding', ['math']
+SPLIT_CAPS = {'train': 500, 'validation': 100, 'test': 200}
+print('GPU:', torch.cuda.get_device_name(0))
+print('Original data:', validate_csvs(SOURCE_DIR))
+frames = {split: pd.read_csv(SOURCE_DIR / f'{split}.csv', keep_default_na=False)
+          for split in SPLITS}
+''')
+md('''## Automatic domain assignment
+Use explicit coding and math keywords. Exclude prompts matching both or neither.
+Save assigned domains and counts for reproducibility; no review upload is required.
+''')
+code('''RULES = {
+    'coding': re.compile(r'\\b(python|javascript|typescript|programming|debug|sql|compiler|html|css)\\b', re.I),
+    'math': re.compile(r'\\b(equation|integral|derivative|algebra|probability|calculus|theorem)\\b', re.I),
+}
+def assign_domain(prompt):
+    matches = [domain for domain, rule in RULES.items() if rule.search(prompt)]
+    return matches[0] if len(matches) == 1 else 'excluded'
+expected = pd.concat([frame[['prompt_id', 'LLM_Input']].assign(split=split)
+                      for split, frame in frames.items()], ignore_index=True)
+assignments = expected.drop_duplicates('prompt_id').copy()
+assignments['domain'] = assignments.LLM_Input.map(assign_domain)
+domain_map = assignments.set_index('prompt_id').domain
+annotated = {split: frame.assign(domain=frame.prompt_id.map(domain_map))
+             for split, frame in frames.items()}
+counts = pd.concat([frame.assign(split=split) for split, frame in annotated.items()])
+display(pd.crosstab([counts['split'], counts['domain']], counts.LLM_name))
+''')
+md('''## Matched experiment data
+Preserve original splits, balance families, match fitting counts and reuse identical target test data.
+''')
+build_source = next(''.join(c['source']) for c in original_cells
+                    if c['cell_type'] == 'code' and ''.join(c['source']).startswith('def balanced'))
+build_source = build_source.replace('n = min(minimum_count(inside), minimum_count(outside))',
+    "n = min(minimum_count(inside), minimum_count(outside), globals().get('SPLIT_CAPS', {}).get(split, 10**9))")
+build_source = build_source.replace('n = minimum_count(target_test)',
+    "n = min(minimum_count(target_test), globals().get('SPLIT_CAPS', {}).get('test', 10**9))")
+build_source = build_source.replace('reviewed examples', 'keyword-assigned examples').replace('reviewed examples', 'examples')
+start = build_source.index("manifest = {")
+end = build_source.index('for condition, parts in built.items():', start)
+build_source = build_source[:start] + '''manifest = {'target_domain': TARGET_DOMAIN, 'source_domains': SOURCE_DOMAINS,
+            'seed': SEED, 'mode': 'output', 'domain_method': 'prompt_keyword_proxy',
+            'split_caps_per_family': SPLIT_CAPS, 'epochs': EPOCHS, 'max_len': MAX_LEN,
+            'conditions': {}}
+''' + build_source[end:]
+build_source = build_source.replace("review.to_csv(SESSION_DIR / 'domain_review.csv', index=False)",
+    "assignments.to_csv(SESSION_DIR / 'domain_assignments.csv', index=False)")
+code(build_source)
+helper = next(''.join(c['source']) for c in original_cells
+              if c['cell_type'] == 'code' and ''.join(c['source']).startswith('EXPERIMENTS ='))
+code(helper)
+code('''for condition, model in EXPERIMENTS:
+    print(f'Running {condition} / {model}', flush=True)
+    train_and_review(condition, model)
+''')
+comparison_source = next(''.join(c['source']) for c in original_cells
+                         if c['cell_type'] == 'code' and ''.join(c['source']).startswith('tables, per_class'))
+md('''## RQ3 results
+Positive F1 drop means fitting on math transfers worse to coding than fitting on coding.
+Use the displayed sample counts and keyword-proxy domain definition in your report.
+''')
+code(comparison_source + "\nprint('Results saved:', SESSION_DIR)\n")
+
 notebook = {'cells': cells, 'metadata': {'colab': {'name': 'RQ3_Training.ipynb'},
             'accelerator': 'GPU', 'kernelspec': {'display_name': 'Python 3', 'language': 'python', 'name': 'python3'},
             'language_info': {'name': 'python'}}, 'nbformat': 4, 'nbformat_minor': 5}

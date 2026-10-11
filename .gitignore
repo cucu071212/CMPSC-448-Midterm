@@ -3,3 +3,11 @@ __pycache__/
 *.pyc
 results/
 .venv/
+
+# Local Codex tools, settings, and agent instructions
+.[cC][oO][dD][eE][xX]*
+[cC][oO][dD][eE][xX]/
+[cC][oO][dD][eE][xX]_*/
+AGENTS.md
+AGENTS.override.md
+.agents/
