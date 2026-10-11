@@ -133,7 +133,3 @@ A CUDA GPU is used automatically when available.
 | RNN | both | | |
 
 Chance level is 33.3% (three balanced classes). See the report for confusion matrices and analysis.
-
-## Use of AI Tools
-
-As permitted by the course policy, AI assistants were used to help brainstorm experiments, draft code and debug. All code and results were reviewed, run and verified by the team.
