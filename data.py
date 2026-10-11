@@ -2,8 +2,8 @@
 
 Shared by both models so they see exactly the same inputs.
 
-Usage (Colab, after mounting Drive):
-    from src.data import build_loaders
+Usage (after adding PROJECT_DIR to sys.path):
+    from data import build_loaders
     loaders, vocab = build_loaders(DATA_DIR, mode="output")
     for x, y in loaders["train"]:   # x: (B, max_len) LongTensor, y: (B,) LongTensor
         ...
