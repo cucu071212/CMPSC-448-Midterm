@@ -1,5 +1,18 @@
 # RQ3: Generalization across task domains
 
+## Colab notebook
+
+`RQ3_Training.ipynb`를 Colab에 업로드하고 T4 GPU를 선택하세요. 기존
+`Training.ipynb`의 `train.py`, `data.py`, CNN 및 BiLSTM을 재사용합니다.
+원본 데이터 준비 후 검토 CSV를 다운로드해 `reviewed_domain`을 작성하고
+다시 업로드해야 합니다. 기본 실험은 general question answering → coding이며,
+같은 coding test set에서 in-domain/cross-domain CNN/RNN 총 4회를 비교합니다.
+학습량과 family 비율을 맞추고 조건별 train에서 vocabulary를 새로 만듭니다.
+마지막 셀에서 검토 라벨, 실제 split, 모델 및 비교 결과를 ZIP으로 다운로드합니다.
+
+`create_notebook.py`는 노트북 생성 소스이고, `verify_notebook.py`는 합성 데이터로
+split 불변 조건을 검증합니다. GPU 전체 학습 검증은 별도로 Colab에서 수행해야 합니다.
+
 RQ3 작업은 이 폴더에서 진행합니다. 루트의 기존 코드, `data/`, `results/`는 수정하지 않습니다.
 
 ## 폴더 구성
