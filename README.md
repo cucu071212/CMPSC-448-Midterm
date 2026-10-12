@@ -11,7 +11,7 @@ Project report: [`report/report.pdf`](report/report.pdf)
 
 ## Quick Start (for reproduction)
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cucu071212/CMPSC-448-Midterm/blob/main/reproduce.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cucu071212/CMPSC-448-Midterm/blob/main/training.ipynb)
 
 1. Open `reproduce.ipynb` in Colab with the badge above.
 2. Set **Runtime → Change runtime type → GPU**.
