@@ -2,7 +2,7 @@
 
 **CMPSC 448 Midterm Project — Fall 2026**
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cucu071212/CMPSC-448-Midterm/blob/main/Training.ipynb)
+**Main training:** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cucu071212/CMPSC-448-Midterm/blob/main/Training.ipynb)
 
 **RQ3 cross-domain training:** [![Open RQ3 In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cucu071212/CMPSC-448-Midterm/blob/main/rq3/RQ3_Training.ipynb)
 
