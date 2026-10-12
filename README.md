@@ -2,11 +2,11 @@
 
 **CMPSC 448 Midterm Project — Fall 2026**
 
-**Main training:** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cucu071212/CMPSC-448-Midterm/blob/main/Training.ipynb)
+**Main training:** [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cucu071212/CMPSC-448-Midterm/blob/main/Training.ipynb)
 
-**RQ3 cross-domain training:** [![Open RQ3 In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cucu071212/CMPSC-448-Midterm/blob/main/rq3/RQ3_Training.ipynb)
+**RQ3 cross-domain training:** [![Open RQ3 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cucu071212/CMPSC-448-Midterm/blob/main/rq3/RQ3_Training.ipynb)
 
-For RQ3, open the button above and choose **Runtime > Run all**. The notebook automatically fetches the `main` branch, installs dependencies, prepares missing data, and runs all four CNN/RNN comparisons. No code edits or uploads are needed. It uses GPU when available and otherwise runs on CPU. Initial data preparation downloads about 1.61 GB; CPU training takes longer. Save results before the Colab runtime resets.
+For RQ3, open the notebook above and select **Runtime → Run all**. It is designed to fetch the `main` branch, install dependencies, prepare missing data, and run four CNN/RNN comparisons. No uploads or code edits should be needed. A GPU is recommended; CPU runs take longer. Initial dataset preparation downloads approximately 1.61 GB. Save results before your Colab runtime resets.
 
 This project studies whether text classifiers can identify which LLM family generated a response. We compare a **TextCNN** and a **bidirectional LSTM** on responses from three model families:
 
@@ -25,10 +25,10 @@ Extra-credit work also explores cross-domain generalization and model-specific r
 
 ## Team
 
-| Role   | Name        | Responsibilities                                                  |
-| ------ | ----------- | ----------------------------------------------------------------- |
+| Role | Name | Responsibilities |
+|---|---|---|
 | Member | Charlie Kim | Data preprocessing, shared training pipeline, RNN (LSTM), RQ1–RQ2 |
-| Leader | Jonghun Won | CNN, RQ3–RQ4 analysis, report editing                             |
+| Leader | Jonghun Won | CNN, RQ3–RQ4 analysis, report editing |
 
 ---
 
@@ -36,14 +36,14 @@ Extra-credit work also explores cross-domain generalization and model-specific r
 
 All results below are from the balanced test set with **4,374 examples** (**1,458 per class**).
 
-| Model   | Input              | Test Accuracy |   Macro-F1 | Best Epoch |
-| ------- | ------------------ | ------------: | ---------: | ---------: |
-| CNN     | output only        |        92.96% |     0.9296 |          6 |
-| RNN     | output only        |        92.43% |     0.9243 |         10 |
-| CNN     | input only         |        34.09% |     0.3396 |          6 |
-| RNN     | input only         |        34.50% |     0.3436 |          8 |
-| **CNN** | **input + output** |    **93.39%** | **0.9339** |      **8** |
-| RNN     | input + output     |        91.06% |     0.9106 |         15 |
+| Model | Input | Test Accuracy | Macro-F1 | Best Epoch |
+|---|---|---:|---:|---:|
+| **CNN** | **output only** | **93.14%** | **0.931** | **10** |
+| RNN | output only | 92.55% | 0.925 | 9 |
+| CNN | input only | 32.99% | 0.327 | 11 |
+| RNN | input only | 33.58% | 0.335 | 5 |
+| CNN | input + output | 92.32% | 0.923 | 9 |
+| RNN | input + output | 90.76% | 0.908 | 10 |
 
 Because the dataset contains three balanced classes, random-chance accuracy is approximately **33.3%**.
 
@@ -53,13 +53,13 @@ Because the dataset contains three balanced classes, random-chance accuracy is a
 Yes. Both models achieve about **92–93% accuracy** using only the generated response, showing that GPT, Claude, and Gemini outputs contain strong model-specific linguistic and formatting signals.
 
 **RQ2 — Does the prompt help?**  
-The prompt alone performs near chance level, so prompts do not reveal the model identity. Adding the prompt to the response gives a small improvement for CNN (**92.96% → 93.39%**) but lowers RNN performance (**92.43% → 91.06%**). This suggests that most of the useful signal comes from the model response itself.
+The prompt alone performs near chance level, so prompts do not reveal the model identity. Adding the prompt to the response lowers performance for both CNN (**93.14% → 92.32%**) and RNN (**92.55% → 90.76%**). This suggests that most of the useful signal comes from the model response itself.
 
 ---
 
 ## Dataset
 
-We use the public **LMArena `arena-human-preference-140k`** dataset, which contains real user prompts and responses from many LLMs.
+We use the public **LMArena `arena-human-preference-140k`** dataset, which contains real user prompts and responses from many LLMs. After filtering and deduplication, the report records **53,682** qualifying responses before balancing (**25,366 Claude, 18,317 Gemini, 9,999 GPT**).
 
 ### Preprocessing
 
@@ -76,11 +76,11 @@ The pipeline:
 6. Splits by normalized prompt hash so the same prompt cannot appear across train/validation/test.
 7. Downsamples each split to keep the three classes balanced.
 
-| Split      |   Rows | Per Family |
-| ---------- | -----: | ---------: |
-| Train      | 20,844 |      6,948 |
-| Validation |  4,779 |      1,593 |
-| Test       |  4,374 |      1,458 |
+| Split | Rows | Per Family |
+|---|---:|---:|
+| Train | 20,844 | 6,948 |
+| Validation | 4,779 | 1,593 |
+| Test | 4,374 | 1,458 |
 
 Labels:
 
@@ -159,18 +159,18 @@ Packed sequences are used so padding is ignored by the LSTM.
 
 Both models use the same training and evaluation pipeline.
 
-| Setting           | Value               |
-| ----------------- | ------------------- |
-| Loss              | Cross-entropy       |
-| Optimizer         | AdamW               |
-| Learning rate     | 1e-3                |
-| Weight decay      | 0.01                |
-| Batch size        | 64                  |
-| Gradient clipping | 1.0                 |
-| Maximum epochs    | 15                  |
-| Early stopping    | Patience = 3        |
-| Selection metric  | Validation macro-F1 |
-| Random seed       | 42                  |
+| Setting | Value |
+|---|---|
+| Loss | Cross-entropy |
+| Optimizer | AdamW |
+| Learning rate | 1e-3 |
+| Weight decay | 0.01 |
+| Batch size | 64 |
+| Gradient clipping | 1.0 |
+| Maximum epochs | 15 |
+| Early stopping | Patience = 3 |
+| Selection metric | Validation macro-F1 |
+| Random seed | 42 |
 
 The best checkpoint is selected using validation macro-F1 and evaluated **once** on the test set.
 
@@ -275,7 +275,7 @@ python verify_pipeline.py
 ### RQ1: Can we identify which LLM generated a response?
 
 **Yes.**  
-CNN reaches **92.96%** accuracy and RNN reaches **92.43%** accuracy using only the generated response.
+CNN reaches **93.14%** accuracy and RNN reaches **92.55%** accuracy using only the generated response.
 
 This strongly suggests that model families leave identifiable response-level fingerprints.
 
@@ -286,17 +286,26 @@ Mostly **no**.
 Prompt-only accuracy is approximately chance:
 
 ```text
-CNN: 34.09%
-RNN: 34.50%
+CNN: 32.99%
+RNN: 33.58%
 ```
 
-The CNN gains only **0.43 percentage points** when the prompt is added to the response, while the RNN performs worse.
+Adding the prompt reduces CNN accuracy by **0.82 percentage points** and RNN accuracy by **1.79 percentage points** relative to response-only input.
 
 The response itself therefore contains nearly all of the discriminative information.
 
 ### RQ3: Do LLM fingerprints generalize across task domains?
 
-The `rq3/` directory contains the cross-domain experiment pipeline for comparing in-domain and cross-domain performance using the same CNN/RNN framework.
+We compare models trained on coding versus math prompts, using **coding responses as the test domain**. These experiments use 183 training samples, 45 validation samples, and 210 test samples, with a maximum sequence length of 128 and up to 3 epochs.
+
+| Model | Train domain | Test domain | Accuracy | Macro-F1 |
+|---|---|---|---:|---:|
+| CNN | Coding | Coding | 53.33% | 0.5096 |
+| CNN | Math | Coding | 50.48% | 0.4425 |
+| RNN | Coding | Coding | 65.71% | 0.6487 |
+| RNN | Math | Coding | 64.76% | 0.6455 |
+
+Both models remain above chance on the cross-domain test. However, the small data size and single random seed limit claims about generalization. See `rq3/RQ3_Training.ipynb` for the experiment.
 
 ### RQ4: What characteristics distinguish different LLMs?
 
@@ -311,7 +320,7 @@ The `rq3/` directory contains the cross-domain experiment pipeline for comparing
 - em dashes
 - common opening phrases
 
-These features help interpret what stylistic signals the classifiers may be learning.
+In the report's 4,374-example test-set analysis, Gemini responses average **724.49 words**, compared with **379.39** for GPT and **258.33** for Claude. GPT uses Markdown headings in **64.20%** of responses, versus **19.34%** for Claude and **33.20%** for Gemini. Gemini uses numbered lists in **60.91%** of responses, versus **28.67%** for GPT and **31.55%** for Claude. These correlations do not establish which signals the classifiers rely on.
 
 ---
 
