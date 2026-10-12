@@ -8,6 +8,20 @@ import pandas as pd
 
 def main():
     notebook = json.loads(Path(__file__).with_name('RQ3_Training.ipynb').read_text(encoding='utf-8'))
+    code_sources = [''.join(c['source']) for c in notebook['cells'] if c['cell_type'] == 'code']
+    setup = code_sources[0]
+    assert "REPO_REF = 'main'" in setup
+    assert "'git', 'clone', '--branch', REPO_REF" in setup
+    assert "'pip', 'install'" in setup
+    assert 'import pandas' not in setup and 'import torch' not in setup
+    settings = code_sources[1]
+    assert 'ensure_csvs(SOURCE_DIR, seed=SEED)' in settings
+    assert "DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'" in settings
+    assert any("'--device', DEVICE" in source for source in code_sources)
+    assert not any('files.upload(' in source or 'assert torch.cuda.is_available()' in source
+                   for source in code_sources)
+    readme = Path(__file__).resolve().parent.parent.joinpath('README.md').read_text(encoding='utf-8')
+    assert 'blob/main/rq3/RQ3_Training.ipynb' in readme
     namespace = {'pd': pd, 'LABELS': {'GPT': 0, 'Claude': 1, 'Gemini': 2},
                  'SPLITS': ('train', 'validation', 'test')}
     for cell in notebook['cells']:
@@ -38,6 +52,12 @@ def main():
             assert len(frame) == 12
             assert frame.LLM_name.value_counts().eq(4).all()
     assert first['in_domain']['test'].equals(first['cross_domain']['test'])
+    namespace['SPLIT_CAPS'] = {'train': 2, 'validation': 1, 'test': 3}
+    capped = build(frames, 'coding', ['general_qa'], 42)
+    for parts in capped.values():
+        for split, frame in parts.items():
+            assert frame.LLM_name.value_counts().eq(namespace['SPLIT_CAPS'][split]).all()
+    assert capped['in_domain']['test'].equals(capped['cross_domain']['test'])
     broken = {split: frame.copy() for split, frame in frames.items()}
     broken['train'] = broken['train'].loc[~(broken['train'].domain.eq('general_qa')
                                           & broken['train'].LLM_name.eq('Gemini'))]
@@ -55,7 +75,8 @@ def main():
         pass
     else:
         raise AssertionError('Prompt leakage accepted')
-    print('PASS: notebook syntax, clean outputs, deterministic matching, equal family counts,')
+    print('PASS: main Colab link, automatic setup/data, CPU fallback, split caps,')
+    print('notebook syntax, clean outputs, deterministic matching, equal family counts,')
     print('identical target tests, missing-family rejection, and prompt-leakage rejection.')
 
 

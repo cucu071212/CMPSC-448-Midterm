@@ -4,6 +4,10 @@
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cucu071212/CMPSC-448-Midterm/blob/main/Training.ipynb)
 
+**RQ3 cross-domain training:** [![Open RQ3 In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/cucu071212/CMPSC-448-Midterm/blob/main/rq3/RQ3_Training.ipynb)
+
+For RQ3, open the button above and choose **Runtime > Run all**. The notebook automatically fetches the `main` branch, installs dependencies, prepares missing data, and runs all four CNN/RNN comparisons. No code edits or uploads are needed. It uses GPU when available and otherwise runs on CPU. Initial data preparation downloads about 1.61 GB; CPU training takes longer. Save results before the Colab runtime resets.
+
 This project studies whether text classifiers can identify which LLM family generated a response. We compare a **TextCNN** and a **bidirectional LSTM** on responses from three model families:
 
 - GPT

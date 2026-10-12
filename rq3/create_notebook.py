@@ -30,7 +30,7 @@ import sys, subprocess, json, hashlib
 from datetime import datetime
 
 REPO_URL = 'https://github.com/cucu071212/CMPSC-448-Midterm.git'
-REPO_REF = 'rnn'  # Same pipeline branch used by Training.ipynb.
+REPO_REF = 'main'  # Same pipeline branch used by Training.ipynb.
 PROJECT_DIR = Path('/content/CMPSC-448-Midterm')
 if not PROJECT_DIR.exists():
     subprocess.run(['git', 'clone', '--branch', REPO_REF, REPO_URL, str(PROJECT_DIR)], check=True)
@@ -312,38 +312,53 @@ files.download(str(archive))
 original_cells = cells
 cells = []
 md('''# RQ3: automatic cross-domain comparison
-Use your existing project and train/validation/test CSVs. Select a GPU and Run all.
-No cloning, package installation, dataset download, manual review, or archive download.
+Open this notebook in Colab and choose **Runtime > Run all**.
+Setup automatically clones the `main` branch, installs dependencies, and prepares
+the public dataset when valid CSVs are unavailable. No path edits, uploads,
+Google Drive mount, or manual domain review are required.
+GPU is preferred automatically; CPU is used when no GPU is available (slower).
+The first dataset preparation downloads about 1.61 GB in addition to dependencies.
 Compares coding-trained and math-trained classifiers on the SAME coding test set,
 using CNN and RNN (four runs). Domains are keyword proxies from prompts, not human-reviewed labels.
 The quick run uses at most 500 training, 100 validation and 200 test responses per family,
 3 epochs and 128 tokens. This is an exploratory coding-versus-math RQ3 result.
-30 minutes is a target; GPU speed and available examples determine actual runtime.
+Runtime depends on hardware, downloads, and available examples.
+Results are saved under `/content/CMPSC-448-Midterm/rq3/experiments` in Colab.
+Download the results before disconnecting; runtime resets erase local files.
 ''')
 code('''from pathlib import Path
 import sys, subprocess, json, re
 from datetime import datetime
-import pandas as pd
-import torch
-from IPython.display import display, Image
 
+REPO_URL = 'https://github.com/cucu071212/CMPSC-448-Midterm.git'
+REPO_REF = 'main'
 PROJECT_DIR = Path('/content/CMPSC-448-Midterm')
 if not (PROJECT_DIR / 'train.py').is_file() and Path('train.py').is_file():
     PROJECT_DIR = Path.cwd()
+if not PROJECT_DIR.exists():
+    subprocess.run(['git', 'clone', '--branch', REPO_REF, REPO_URL,
+                    str(PROJECT_DIR)], check=True)
 PROJECT_DIR = PROJECT_DIR.resolve()
-SOURCE_DIR = PROJECT_DIR / 'data'  # Existing prepared CSVs.
+SOURCE_DIR = PROJECT_DIR / 'data'
 RQ3_DIR = PROJECT_DIR / 'rq3'
-for name in ('train.py', 'data.py', 'src/cnn.py', 'src/rnn.py'):
-    assert (PROJECT_DIR / name).is_file(), f'Code missing: {PROJECT_DIR / name}'
+for name in ('train.py', 'data.py', 'prepare_data.py', 'requirements.txt', 'src/cnn.py', 'src/rnn.py'):
+    if not (PROJECT_DIR / name).is_file():
+        raise RuntimeError(f'Code missing: {PROJECT_DIR / name}. Use the main branch containing the pipeline.')
 sys.path.insert(0, str(PROJECT_DIR))
-from prepare_data import validate_csvs, COLUMNS, LABELS, SPLITS
-for split in SPLITS:
-    assert (SOURCE_DIR / f'{split}.csv').is_file(), f'Existing CSV required: {SOURCE_DIR / (split + ".csv")}. Set SOURCE_DIR to your data folder.'
-assert torch.cuda.is_available(), 'Select a GPU runtime.'
+subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', '-r',
+                str(PROJECT_DIR / 'requirements.txt')], check=True)
+''')
+code('''import pandas as pd
+import torch
+from IPython.display import display, Image
+from prepare_data import ensure_csvs, validate_csvs, COLUMNS, LABELS, SPLITS
+
 SEED, EPOCHS, PATIENCE, BATCH_SIZE, MAX_LEN = 42, 3, 2, 64, 128
 TARGET_DOMAIN, SOURCE_DOMAINS = 'coding', ['math']
 SPLIT_CAPS = {'train': 500, 'validation': 100, 'test': 200}
-print('GPU:', torch.cuda.get_device_name(0))
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+print('Device:', torch.cuda.get_device_name(0) if DEVICE == 'cuda' else 'CPU (training will be slower)')
+ensure_csvs(SOURCE_DIR, seed=SEED)
 print('Original data:', validate_csvs(SOURCE_DIR))
 frames = {split: pd.read_csv(SOURCE_DIR / f'{split}.csv', keep_default_na=False)
           for split in SPLITS}
@@ -391,7 +406,7 @@ build_source = build_source.replace("review.to_csv(SESSION_DIR / 'domain_review.
 code(build_source)
 helper = next(''.join(c['source']) for c in original_cells
               if c['cell_type'] == 'code' and ''.join(c['source']).startswith('EXPERIMENTS ='))
-code(helper)
+code(helper.replace("'--device', 'cuda'", "'--device', DEVICE"))
 code('''for condition, model in EXPERIMENTS:
     print(f'Running {condition} / {model}', flush=True)
     train_and_review(condition, model)
